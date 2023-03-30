@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Word to PDF Convertor</title>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+        background-color: #f0f0f0;
+      }
+  
+      .topbar {
+        background-color: #333;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 20px;
+        box-sizing: border-box;
+      }
+  
+      .title {
+        flex-grow: 1;
+        text-align: center;
+        color: #fff;
+      }
+  
+      .bar-spacer {
+        height: 60px;
+      }
+  
+      form {
+        width: 400px;
+        margin: 180px auto 0; /* changed margin-top to 180px to account for larger topbar */
+        background-color: #f8f8f8;
+        border-radius: 5px;
+        padding: 20px;
+        text-align: center;
+      }
+  
+      label {
+        font-weight: bold;
+      }
+  
+      input[type="file"] {
+        margin-left: 10px;
+      }
+  
+      button[type="button"] {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 30px;
+        border-radius: 5px;
+        border: none;
+        background-color: #4caf50;
+        color: #fff;
+        font-size: 16px;
+        cursor: pointer;
+      }
+  
+      div#result {
+        margin: 50px auto;
+        width: 400px;
+        background-color: #f8f8f8;
+        border-radius: 5px;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .download-link {
+      display: block;
+      margin-top: 20px;
+      padding: 10px 30px;
+      border-radius: 5px;
+      border: none;
+      background-color: #4caf50;
+      color: #fff;
+      font-size: 16px;
+      text-decoration: none;
+    }
+
+    .download-link:hover {
+      background-color: #2E8B57;
+    }
+    </style>
+  </head>
+  <body>
+  <div class="topbar">
+    <button onclick="goBack()" style="margin-right: auto;">Home</button>
+    <div class="title">Word to PDF Convertor</div>
+  </div>
+  <div class="bar-spacer"></div>
+  <form enctype="multipart/form-data">
+      <label for="docx">Select a Document:</label>
+      <input type="file" id="docx" name="docx"><br><br>
+      <button type="button" onclick="convertToPdf()">Convert to PDF</button>
+    </form>
+    <div id="result"></div>
+    
+    <script>
+      function convertToPdf() {
+        var fileInput = document.getElementById("docx");
+        var file = fileInput.files[0];
+        if (!file) {
+          alert("Please select a file.");
+          return;
+        }
+        if (file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+          alert("Please select a .docx file.");
+          return;
+        }
+        if (file.size > 10000000) {
+          alert("File size must be less than 10 MB.");
+          return;
+        }
+        const formData = new FormData();
+        formData.append('docx', file);
+        fetch('/api/wordtopdf', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.blob())
+        .then(blob => {
+          const objectUrl = URL.createObjectURL(blob);
+          const resultElement = document.getElementById('result');
+          resultElement.innerHTML = `
+            <p>Conversion complete.</p>
+            <img src="${objectUrl}" alt="Converted PDF">
+            <a href="${objectUrl}" download="converted.pdf">Download File</a>
+          `;
+        })
+        .catch(error => {
+          document.getElementById('result').innerHTML = `<p>An error occurred: ${error.message}</p>`;
+        });
+      }
+      
+      function goBack() {
+        window.history.back();
+      }
+    </script>
+  </body>
+</html>
